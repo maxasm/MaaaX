@@ -1,9 +1,6 @@
 package main
 
-import (
-	"fmt"
-)
-
 func main() {
-	fmt.Printf("")
+	// start the web server
+	start_server()
 }
