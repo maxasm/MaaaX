@@ -1,2 +1,3 @@
 MaaaX-server
-static/
+client/node_modules
+client/dist
