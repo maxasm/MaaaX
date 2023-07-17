@@ -6,6 +6,7 @@ const (
 	ADMIN
 	MANAGER
 	WRITER
+	CLIENT
 )
 
 type Contact struct {
