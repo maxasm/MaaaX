@@ -1,6 +1,5 @@
 package main
 
-// Todo: use fmt.Fprintf
 import (
 	"log"
 	"fmt"

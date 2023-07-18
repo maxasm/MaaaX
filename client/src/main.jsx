@@ -1,10 +1,38 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
-import './index.css'
+import React from "react"
+import ReactDOM from "react-dom/client"
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-)
+// Material UI
+import Typography from "@mui/material/Typography"
+import CssBaseline from "@mui/material/CssBaseline"
+
+// wouter for routing
+import {Switch, Route} from "wouter"
+
+// Routing Pages
+import LoginPage from "./pages/LoginPage"
+import HomePage from "./pages/HomePage"
+import PageNotFound from "./pages/PageNotFound"
+import SignUp from "./pages/SignUp"
+
+// css
+import "./css/style.css"
+
+
+const App = ()=> {
+	return (
+		<React.StrictMode>
+			<CssBaseline/>
+			<Switch>
+				<Route path="/" component={HomePage}/>
+				<Route path="/login" component={LoginPage}/>
+				<Route path="/signup" component={SignUp}/>
+				<Route component={PageNotFound}/>
+			</Switch>
+		</React.StrictMode>
+	)
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"))
+root.render(<App/>)
+
+

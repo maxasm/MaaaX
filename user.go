@@ -10,7 +10,7 @@ const (
 )
 
 type Contact struct {
-	Phone string `json:"phone,omitempty" bson:"phone,emitempty"` // the phone number
+//	Phone string `json:"phone,omitempty" bson:"phone,emitempty"` // the phone number
 	Email string `json:"email,omitempty" bson:"email,emitempty"` // the email
 }
 
