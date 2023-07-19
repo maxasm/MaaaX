@@ -1,12 +1,12 @@
 package main
 
 import (
-	"log"
 	"fmt"
+	"log"
 )
 
-type RedWriter struct {}
-type GreenWriter struct {}
+type RedWriter struct{}
+type GreenWriter struct{}
 
 func (rw RedWriter) Write(data []byte) (int, error) {
 	fmt.Printf("\033[31m%s\033[0m", string(data))
@@ -18,5 +18,5 @@ func (gw GreenWriter) Write(data []byte) (int, error) {
 	return len(data), nil
 }
 
-var errorLogger = log.New(RedWriter{}, "[error] ", log.Ldate | log.Ltime)
-var eventLogger = log.New(GreenWriter{}, "[event] ", log.Ldate | log.Ltime)
+var errorLogger = log.New(RedWriter{}, "[error] ", log.Ldate|log.Ltime)
+var eventLogger = log.New(GreenWriter{}, "[event] ", log.Ldate|log.Ltime)

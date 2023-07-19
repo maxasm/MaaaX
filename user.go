@@ -9,21 +9,14 @@ const (
 	CLIENT
 )
 
-type Contact struct {
-//	Phone string `json:"phone,omitempty" bson:"phone,emitempty"` // the phone number
-	Email string `json:"email,omitempty" bson:"email,emitempty"` // the email
-}
-
-type Identity struct {
-	FirstName string `json:"firstname,omitempty" bson:"firstname,emitempty"`
-	LastName  string `json:"lastname,omitempty" bson:"lastname,emitempty"`
-	Username  string `json:"username,omitempty" bson:"username,emitempty"` //unique username
-}
-
 type User struct {
-	ID       string `json:"id,omitempty" bson:"id,emitempty"` // unique ID
-	Identity `json:"identity,omitempty" bson:"identity,emitempty"`
-	Contact  `json:"contact,omitempty" bson:"contact,emitempty"`
+	Username string   `json:"username,omitempty" bson:"username,emitempty"`
+	Name     string   `json:"name,omitempty" bson:"name,emitempty"`
+	ID       string   `json:"id,omitempty" bson:"id,emitempty"`
 	Groups   []*Group `json:"groups,omitempty" bson:"groups,emitempty"`
-	Role     int      `json:"role,omitempty" bson:"role,emitempty"` // the user role -> Admin, Manager, Writer
+	Role     int      `json:"role,omitempty" bson:"role,emitempty"`
+	Verified bool     `json:"verified,omitempty" bson:"verified,omitempty"`
+	Email    string   `json:"email,omitempty" bson:"email,emitempty"`
+	Dp       string   `json:"dp,omitempty" bson:"dp,omitempty"`
+	Bio      string   `json:"bio,omitempty" bson:"bio,omitempty"`
 }
