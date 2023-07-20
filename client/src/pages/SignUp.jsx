@@ -14,11 +14,17 @@ import IconButton from "@mui/material/IconButton"
 import VisibilityOff from "@mui/icons-material/VisibilityOff"
 import Visibility from "@mui/icons-material/Visibility"
 import FormHelperText from "@mui/material/FormHelperText"
+import Snackbar from "@mui/material/Snackbar" 
 
 import {useState} from "react"
 
+import {useRoute} from "wouter"
+import {useLocation} from "wouter"
+
+// Todo: Maybe remove the "Full name" input field for clients 
+
 // password input
-const PasswordInput = ({helperText, error, label, id, value, useOnChange}) => {
+const PasswordInput = ({onBlur, helperText, error, label, id, value, useOnChange}) => {
 	const [showPswd, updateShowPswd] = useState(false)
 	
 	function handleOnClick() {
@@ -43,7 +49,9 @@ const PasswordInput = ({helperText, error, label, id, value, useOnChange}) => {
 				label= {label}
 				value={value}
 				onChange={(e)=> {useOnChange(e.target.value)}}
-				variant="outlined" type={ showPswd ? "text" : "password" }/>			
+				variant="outlined" type={ showPswd ? "text" : "password" }
+				onBlur={onBlur}
+			/>			
 			<FormHelperText error={error}> {helperText}  </FormHelperText>
 		</FormControl>
 	)
@@ -51,6 +59,18 @@ const PasswordInput = ({helperText, error, label, id, value, useOnChange}) => {
 
 
 const SignUp = ()=> {
+
+	const [match, params] = useRoute("/signup/:role")
+	const [location, updateLocation] = useLocation()
+	
+	if (params) {
+		if (!((params.role === "admin") || (params.role === "client") || (params.role === "writer"))) {
+			updateLocation("/signup/writer")	
+			return
+		}
+	}
+		
+	
 	const [password, updatePassword] = useState("")
 	const [confirmPassword, updateConfirmPassword] = useState("")
 	const [name, updateName] = useState("")
@@ -72,10 +92,11 @@ const SignUp = ()=> {
 	const [emailHelperText, updateEmailHelperText] = useState("")
 	const [passwordHelperText, updatePasswordHelperText] = useState("")
 	const [confirmPasswordHelperText, updateConfirmPasswordHelperText] = useState("")
-	
-	function validateName() {
+
+	// Todo: Check if the username is unique	
+	function validateUsername() {
 		if (name.trim().length === 0) {
-			updateNameHelperText("Name can't be empty")	
+			updateNameHelperText("Username can't be empty")	
 			updateNameError(true)
 			return false
 		} 
@@ -121,6 +142,7 @@ const SignUp = ()=> {
 	
 		updatePasswordHelperText("")
 		updatePasswordError(false)
+		return true
 	}
 	
 
@@ -135,25 +157,35 @@ const SignUp = ()=> {
 		updateConfirmPasswordError(false)
 		return true
 	}
+		
 
 	function handleSubmit() {
-		console.log({ name, email, password, confirmPassword})		
-		validateName()
-		validateEmail()
-		validatePassword()
-		validateConfirmPassword()
+		let r1 = validateUsername() 
+		let r2 = validateEmail() 
+		let r3 = validatePassword()
+		let r4 = validateConfirmPassword()
+	
+		if (r1 && r2 && r3 && r4) {
+			console.log("submitting form")
+		} else {
+			console.log("there was an error in the form.")	
+		}
 	}
 
 
 	return (
 		<Stack direction="column" alignItems="center" sx={{margin: "20px auto", maxWidth: "400px", border: "1px solid black"}}>
-			<Typography sx={{fontSize: "32px"}}> Sign Up to MaaaX </Typography>
+			<Typography sx={{fontSize: "32px"}}> Create {params && params.role} Account  </Typography>
 			<Stack directon="column" spacing={2} alignItems="spread" useFlexGap sx={{margin: "10px 0px", width: "65%"}}> 
 				<TextField
 					error={nameError}
 					helperText={nameHelperText}
 					value={name} onChange={(e)=> {handleOnChange(e, updateName)}} 
-					variant="outlined" label="Full name" type="text"/>			
+					variant="outlined"
+					label="Username"
+					type="text"
+					onBlur={()=> {validateUsername()}}
+				/>			
 				<TextField
 					error={emailError}
 					helperText={emailHelperText}
@@ -161,19 +193,25 @@ const SignUp = ()=> {
 					onChange={(e)=> {handleOnChange(e, updateEmail)}}
 					variant="outlined"
 					label="Email"
-					type="email"/>			
+					type="email"
+					onBlur={() => {validateEmail()}}
+				/>			
 				<PasswordInput
 					error={passwordError}
 					helperText={passwordHelperText}
 					label="Password"
 					value={password}
-					useOnChange={updatePassword}/>
+					useOnChange={updatePassword}
+					onBlur={()=> {validatePassword()}}
+				/>
 				<PasswordInput
 					error={confirmPasswordError}
 					helperText={confirmPasswordHelperText}
 					label="Confirm Password"
 					value={confirmPassword}
-					useOnChange={updateConfirmPassword}/>
+					useOnChange={updateConfirmPassword}
+					onBlur={()=> {validateConfirmPassword()}}
+				/>
 				<Button variant="contained" onClick={handleSubmit}> Sign Up </Button>
 			</Stack>
 		</Stack>

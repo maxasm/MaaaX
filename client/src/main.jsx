@@ -25,7 +25,7 @@ const App = ()=> {
 			<Switch>
 				<Route path="/" component={HomePage}/>
 				<Route path="/login" component={LoginPage}/>
-				<Route path="/signup" component={SignUp}/>
+				<Route path="/signup/:role" component={SignUp}/>
 				<Route component={PageNotFound}/>
 			</Switch>
 		</React.StrictMode>
