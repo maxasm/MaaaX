@@ -73,6 +73,8 @@ const SignUp = ()=> {
 	
 	const [password, updatePassword] = useState("")
 	const [confirmPassword, updateConfirmPassword] = useState("")
+	// Todo: Add FullName option for Writer/Admin
+	// Todo: chnage name -> username
 	const [name, updateName] = useState("")
 	const [email, updateEmail] = useState("")
 
@@ -93,7 +95,6 @@ const SignUp = ()=> {
 	const [passwordHelperText, updatePasswordHelperText] = useState("")
 	const [confirmPasswordHelperText, updateConfirmPasswordHelperText] = useState("")
 
-	// Todo: Check if the username is unique	
 	function validateUsername() {
 		if (name.trim().length === 0) {
 			updateNameHelperText("Username can't be empty")	
@@ -159,16 +160,41 @@ const SignUp = ()=> {
 	}
 		
 
-	function handleSubmit() {
+	async function handleSubmit() {
 		let r1 = validateUsername() 
 		let r2 = validateEmail() 
 		let r3 = validatePassword()
 		let r4 = validateConfirmPassword()
 	
 		if (r1 && r2 && r3 && r4) {
-			console.log("submitting form")
+			let name_tr = name.trim()
+			let credentials = {role: params.role, username: name_tr, email, password} 	
+			console.log("submitting form ... ")
+			console.log(credentials)	
+
+			// POST the credentials
+			let sub_res = await fetch("/signup",
+			{
+				method: "POST",
+				headers: {
+					"Content-Type": "Application/json",
+				},
+				body: JSON.stringify(credentials),
+			})
+			
+			if (sub_res.ok) {
+				console.log("Form submitted successfully.")
+			} else {
+					// Todo: Keep the error on even when the <TextField/> is out of focus.
+				if (sub_res.status === 409) {
+					// a user with the same username already exists
+					updateNameHelperText("The username is already taken")
+					updateNameError(true)
+				}	
+			}	
+						
 		} else {
-			console.log("there was an error in the form.")	
+			console.log("there is an error in the form.")	
 		}
 	}
 

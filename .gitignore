@@ -2,3 +2,4 @@ MaaaX-server
 client/node_modules
 client/dist
 *.swp
+.env
