@@ -16,7 +16,7 @@ const HomePage = ()=> {
 					<Button variant="contained" sx={{margin: "0px 4px"}} onClick={()=>{updateLocation("/signup/admin")}}> Create Admin Account </Button>
 					<Button variant="contained" sx={{margin: "0px 4px"}} onClick={()=>{updateLocation("/signup/writer")}}> Create Writer Account </Button>
 					<Button variant="contained" sx={{margin: "0px 4px"}} onClick={()=>{updateLocation("/signup/client")}}> Create Client Account </Button>
-					<Button variant="contained" sx={{margin: "0px 4px"}} onClick={()=>{updateLocation("/login")}}> Log In </Button>
+					<Button variant="contained" sx={{margin: "0px 4px"}} onClick={()=>{updateLocation("/login/client")}}> Log In </Button>
 				</Stack>
 		</Stack>
 	)

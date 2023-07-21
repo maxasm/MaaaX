@@ -72,3 +72,38 @@ func isUsernameUnique(user *User) bool {
 
 	return false 
 }
+
+
+func findUserByUsername(user *User) (*User,error) {
+	collection := db_client.Database("maxusers").Collection(user.Role)
+	res := collection.FindOne(context.TODO(), bson.D{{"username", user.Username}})
+	
+	var resBSON bson.M 
+	err_decode := res.Decode(&resBSON)
+	
+	if err_decode != nil {
+		if err_decode == mongo.ErrNoDocuments {
+			return nil, nil
+		}	
+		return nil, err_decode
+	}
+	
+	debugLogger.Printf("Login find results -> %s\n", indentJSON(resBSON))
+	dbUser := &User{}
+	
+	// convert bson -> []byte
+	data, err_marshal := bson.Marshal(resBSON)
+	if err_marshal != nil {
+		return nil, err_marshal
+	}
+
+	err_unmarshal := bson.Unmarshal(data, dbUser)
+	
+
+	if err_unmarshal != nil {
+		return nil, err_unmarshal
+	}
+
+	debugLogger.Printf("Reconstructed user -> %s\n", indentJSON(dbUser))
+	return dbUser, nil 
+}

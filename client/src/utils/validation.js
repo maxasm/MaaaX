@@ -10,7 +10,7 @@ export function validateUsername(username, updateUsernameHelperTextFn, updateUse
 	return true
 }
 
-export function validateEmail(email, updateEmailHelperTextFn, upadteEmailErrorFn) {
+export function validateEmail(email, updateEmailHelperTextFn, updateEmailErrorFn) {
 	let regTest = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	let em = email.trim()
  

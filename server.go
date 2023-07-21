@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"encoding/json"
 )
 
 const PORT = 8080
@@ -78,6 +79,40 @@ func handleUserSignup(c echo.Context) error {
 	return nil
 }
 
+func handleUserLogin(c echo.Context) error {
+	// read the request body
+	data, err_data := io.ReadAll(c.Request().Body)
+	if err_data != nil {
+		errorLogger.Printf("error reading request body: %s\n", err_data)
+		c.String(http.StatusInternalServerError, "Internal Serever Error")
+		return err_data
+	}
+	
+	user := &User{}
+	 
+	if err_user := json.Unmarshal(data, user); err_user != nil {
+		errorLogger.Printf("error on json.Unmarhsal(): %s\n", err_user)
+		c.String(http.StatusInternalServerError, "Internal Server Error")
+		return err_user
+	}
+	
+	// get the user with the given username
+	dbUser, err_dbUser := findUserByUsername(user)
+	if err_dbUser != nil {
+		errorLogger.Printf("error finding user in database: %s\n", err_dbUser)
+		c.String(http.StatusInternalServerError, "Internal Serever Error")
+		return err_dbUser
+	}
+	
+	if dbUser != nil {
+		debugLogger.Printf("user with username %s exists\n", user.Username)
+	} else {
+		debugLogger.Printf("user with username %s does not exist\n", user.Username)
+	}	
+		
+	return nil
+}
+
 func start_server() {
 	e := echo.New()
 
@@ -86,6 +121,9 @@ func start_server() {
 
 	// handle user signup
 	e.POST("/signup", handleUserSignup)
+
+	// handle user login
+	e.POST("/login", handleUserLogin)
 
 	// start the server
 	err_start := e.Start(fmt.Sprintf(":%d", PORT))

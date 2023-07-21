@@ -18,19 +18,31 @@ import {validatePassword} from "../utils/validation"
 /** routing **/
 import {useLocation, useRoute} from "wouter"
 
+
+async function uploadData(data) {
+	let res = await fetch("/login",
+		{
+			method: "POST",
+			headers: {
+				"Content-Type": "text/json",
+			},	
+			body: JSON.stringify(data) 
+		}
+	)	
+	
+	if (res.OK) {
+		console.log("Logged in successfully")
+	} else {
+		console.log("There was an error logging in to MaaaX")	
+	}	
+}
+
 const LoginPage = () => {
 	// check the role
 	const [match, params] = useRoute("/login/:role")
 	const [loc, updateLoc] = useLocation("")
 	
-	useEffect(()=>{
-		if (!((params.role === "client") || (params.role === "writer") || (params.role === "admin"))) {
-			updateLoc("/login/client")
-			return
-		}
-	}, [])	
-	
-	
+		
 	const [username, updateUsername] = useState("")
 	const [password, updatePassword] = useState("")
 	
@@ -42,6 +54,20 @@ const LoginPage = () => {
 
 	const [rememberLogin, updateRememberLogin] = useState(false)
 	
+	// Todo:
+	const [role, updateRole] = useState("")
+	
+	useEffect(()=>{
+		// set the user 'role'
+		updateRole(params.role)
+		
+		if (!((params.role === "client") || (params.role === "writer") || (params.role === "admin"))) {
+			updateLoc("/login/client")
+			return
+		}
+	}, [])	
+	
+
 	function handleOnChange(e, updateFn) {
 		updateFn(e.target.value)	
 	}
@@ -54,8 +80,8 @@ const LoginPage = () => {
 		let c2 = validatePassword(password, updatePasswordHelperText, updatePasswordError)
 		
 		if (c1 && c2) {
-			let data = {username, password, rememberLogin}
-			console.log(data)	
+			let data = {username, password, rememberLogin, role}
+			uploadData(data)	
 		} else {
 			console.log("Error in log in form")
 		}
@@ -78,7 +104,7 @@ const LoginPage = () => {
 
 	return (
 		<Stack direction="column" sx={{margin: "20px auto", border: "1px solid black", maxWidth: "400px", alignItems: "center"}}>
-			<Typography sx={{fontSize: "32px"}}> Log in to {params && params.role ? params.role : "MaaaX" } Account </Typography>
+			<Typography sx={{fontSize: "32px"}}> Log in to {role ? role : "MaaaX" } Account </Typography>
 			<Stack directon="column" spacing={2} alignItems="spread" useFlexGap sx={{margin: "10px 0px", width: "65%"}}>
 				<TextField
 					type="text"

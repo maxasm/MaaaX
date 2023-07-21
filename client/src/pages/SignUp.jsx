@@ -69,6 +69,7 @@ const SignUp = ()=> {
 	// function to submit the credentials to the backend
 	async function handleSubmit() {
 		// remove trailing spaces from 'Full Name' and 'Username'
+		console.log({username,fname})
 		updateUsername(username.trim())
 		updateFname(fname.trim())
 
@@ -135,7 +136,7 @@ const SignUp = ()=> {
 					variant="outlined"
 					label="Username"
 					type="text"
-					onBlur={()=> {validateUsername()}}
+					onBlur={()=> {validateUsername(username, updateUsernameHelperText, updateUsernameError)}}
 				/>			
 				<TextField
 					error={emailError}
@@ -145,7 +146,7 @@ const SignUp = ()=> {
 					variant="outlined"
 					label="Email"
 					type="email"
-					onBlur={() => {validateEmail()}}
+					onBlur={() => {validateEmail(email, updateEmailHelperText, updateEmailError)}}
 				/>			
 				<PasswordInput
 					error={passwordError}
@@ -153,7 +154,7 @@ const SignUp = ()=> {
 					label="Password"
 					value={password}
 					useOnChange={updatePassword}
-					onBlur={()=> {validatePassword()}}
+					onBlur={()=> {validatePassword(password, updatePasswordHelperText, updatePasswordError)}}
 				/>
 				<PasswordInput
 					error={confirmPasswordError}
@@ -161,7 +162,7 @@ const SignUp = ()=> {
 					label="Confirm Password"
 					value={confirmPassword}
 					useOnChange={updateConfirmPassword}
-					onBlur={()=> {validateConfirmPassword()}}
+					onBlur={()=> {validateConfirmPassword(confirmPassword, password ,updateConfirmPasswordHelperText, updateConfirmPasswordError)}}
 				/>
 				<Button variant="contained" onClick={handleSubmit}> Sign Up </Button>
 			</Stack>
