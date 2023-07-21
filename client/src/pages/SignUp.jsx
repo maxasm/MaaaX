@@ -59,7 +59,6 @@ const PasswordInput = ({onBlur, helperText, error, label, id, value, useOnChange
 
 
 const SignUp = ()=> {
-
 	const [match, params] = useRoute("/signup/:role")
 	const [location, updateLocation] = useLocation()
 	
@@ -69,41 +68,48 @@ const SignUp = ()=> {
 			return
 		}
 	}
-		
 	
+	// if the role is admin/writer -> add Fullname filed
+	const [fname, updateFname] = useState("")
+	
+	// state management for the values of the input fields
 	const [password, updatePassword] = useState("")
 	const [confirmPassword, updateConfirmPassword] = useState("")
-	// Todo: Add FullName option for Writer/Admin
-	// Todo: chnage name -> username
-	const [name, updateName] = useState("")
+	const [username, updateUsername] = useState("")
 	const [email, updateEmail] = useState("")
 
+	// control showing and hiding password
 	const [showPswd, setShowPswd] = useState(true)
 
+	// helper function for managing state of all input fields
 	function handleOnChange(e, updateFn) {
 		updateFn(e.target.value)
 	}
 
-	// Form validatin and Error handlding
-	const [nameError, updateNameError] = useState(false)
+	// state management for the error states of the input fields
+	const [usernameError, updateUsernameError] = useState(false)
 	const [emailError, updateEmailError] = useState(false)
 	const [passwordError, updatePasswordError] = useState(false)
 	const [confirmPasswordError, updateConfirmPasswordError] = useState(false)
+	const [fnameError, updateFnameError] = useState(false)
 
-	const [nameHelperText, updateNameHelperText] = useState("")
+	// state management for the error text of the input fields
+	const [usernameHelperText, updateUsernameHelperText] = useState("")
 	const [emailHelperText, updateEmailHelperText] = useState("")
 	const [passwordHelperText, updatePasswordHelperText] = useState("")
 	const [confirmPasswordHelperText, updateConfirmPasswordHelperText] = useState("")
+	const [fnameHelperText, updateFnameHelperText] = useState("")
 
+	// validation functions for all input fields
 	function validateUsername() {
-		if (name.trim().length === 0) {
-			updateNameHelperText("Username can't be empty")	
-			updateNameError(true)
+		if (username.trim().length === 0) {
+			updateUsernameHelperText("Username can't be empty")	
+			updateUsernameError(true)
 			return false
 		} 
 		
-		updateNameHelperText("")
-		updateNameError(false)
+		updateUsernameHelperText("")
+		updateUsernameError(false)
 		return true
 	}	
 	
@@ -159,16 +165,33 @@ const SignUp = ()=> {
 		return true
 	}
 		
+	function validateFname() {
+		if (fname.trim().length === 0) {
+			updateFnameHelperText("Name can't be empty")	
+			updateFnameError(true)
+			return false
+		} 
+		
+		updateFnameHelperText("")
+		updateFnameError(false)
+		return true
+	}
 
+	// function to submit the credentials to the backend
 	async function handleSubmit() {
 		let r1 = validateUsername() 
 		let r2 = validateEmail() 
 		let r3 = validatePassword()
 		let r4 = validateConfirmPassword()
+		let r5 = true
 	
-		if (r1 && r2 && r3 && r4) {
-			let name_tr = name.trim()
-			let credentials = {role: params.role, username: name_tr, email, password} 	
+		if (params && params.role !== "client") {
+			r5 = validateFname()	
+		}
+	
+		if (r1 && r2 && r3 && r4 && r5) {
+			let name_tr = username.trim()
+			let credentials = {fullname: fname, role: params.role, username: name_tr, email, password} 	
 			console.log("submitting form ... ")
 			console.log(credentials)	
 
@@ -185,11 +208,10 @@ const SignUp = ()=> {
 			if (sub_res.ok) {
 				console.log("Form submitted successfully.")
 			} else {
-					// Todo: Keep the error on even when the <TextField/> is out of focus.
 				if (sub_res.status === 409) {
 					// a user with the same username already exists
-					updateNameHelperText("The username is already taken")
-					updateNameError(true)
+					updateUsernameHelperText("The username is already taken")
+					updateUsernameError(true)
 				}	
 			}	
 						
@@ -203,10 +225,21 @@ const SignUp = ()=> {
 		<Stack direction="column" alignItems="center" sx={{margin: "20px auto", maxWidth: "400px", border: "1px solid black"}}>
 			<Typography sx={{fontSize: "32px"}}> Create {params && params.role} Account  </Typography>
 			<Stack directon="column" spacing={2} alignItems="spread" useFlexGap sx={{margin: "10px 0px", width: "65%"}}> 
+				{(params && (params.role !== "client" ? 
+					<TextField
+						error={fnameError}
+						helperText={fnameHelperText}
+						value={fname} onChange={(e)=> {handleOnChange(e, updateFname)}} 
+						variant="outlined"
+						label="Full Name"
+						type="text"
+						onBlur={()=> {validateFname()}}
+					/>	
+					: null))}
 				<TextField
-					error={nameError}
-					helperText={nameHelperText}
-					value={name} onChange={(e)=> {handleOnChange(e, updateName)}} 
+					error={usernameError}
+					helperText={usernameHelperText}
+					value={username} onChange={(e)=> {handleOnChange(e, updateUsername)}} 
 					variant="outlined"
 					label="Username"
 					type="text"

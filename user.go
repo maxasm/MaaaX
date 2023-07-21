@@ -14,6 +14,7 @@ type User struct {
 	Dp       string   `json:"dp,omitempty" bson:"dp,omitempty"`
 	Bio      string   `json:"bio,omitempty" bson:"bio,omitempty"`
 	Password string   `json:"password,omitempty" bson:"password,omitempty"`
+	Fullname string   `json:"fullname,omitempty" bson:"fullname,omitempty"`
 }
 
 func createNewUser(json_data []byte) (*User, error) {
