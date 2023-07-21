@@ -66,6 +66,7 @@ func handleUserSignup(c echo.Context) error {
 	// check if a user with the same username exists
 	if !isUsernameUnique(user) {
 		c.String(http.StatusConflict, "Username is not unique.")	
+		eventLogger.Printf("http.StatusConflict 409 username is not unique")
 		return nil
 	}
 	

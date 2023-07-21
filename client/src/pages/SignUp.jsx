@@ -15,59 +15,25 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff"
 import Visibility from "@mui/icons-material/Visibility"
 import FormHelperText from "@mui/material/FormHelperText"
 import Snackbar from "@mui/material/Snackbar" 
+import PasswordInput from "../components/PasswordInput"
 
-import {useState} from "react"
+import {useState, useEffect} from "react"
 
 import {useRoute} from "wouter"
 import {useLocation} from "wouter"
 
-// Todo: Maybe remove the "Full name" input field for clients 
-
-// password input
-const PasswordInput = ({onBlur, helperText, error, label, id, value, useOnChange}) => {
-	const [showPswd, updateShowPswd] = useState(false)
-	
-	function handleOnClick() {
-		updateShowPswd(!showPswd)
-	}
-
-	return (
-		<FormControl>
-			<InputLabel
-				error={error}
-				htmlFor={id}> {label}  </InputLabel>
-			<OutlinedInput
-				endAdornment={
-					<InputAdornment position="end">
-						<IconButton onClick={handleOnClick}>
-							{showPswd ? <VisibilityOff/> : <Visibility/>}
-						</IconButton>
-					</InputAdornment>
-				}
-				error={error}
-				id={id}
-				label= {label}
-				value={value}
-				onChange={(e)=> {useOnChange(e.target.value)}}
-				variant="outlined" type={ showPswd ? "text" : "password" }
-				onBlur={onBlur}
-			/>			
-			<FormHelperText error={error}> {helperText}  </FormHelperText>
-		</FormControl>
-	)
-}
-
+import {validateUsername, validateEmail, validatePassword, validateConfirmPassword, validateFname} from "../utils/validation"
 
 const SignUp = ()=> {
 	const [match, params] = useRoute("/signup/:role")
 	const [location, updateLocation] = useLocation()
 	
-	if (params) {
+	useEffect(()=> {
 		if (!((params.role === "admin") || (params.role === "client") || (params.role === "writer"))) {
 			updateLocation("/signup/writer")	
 			return
 		}
-	}
+	}, [])
 	
 	// if the role is admin/writer -> add Fullname filed
 	const [fname, updateFname] = useState("")
@@ -100,98 +66,24 @@ const SignUp = ()=> {
 	const [confirmPasswordHelperText, updateConfirmPasswordHelperText] = useState("")
 	const [fnameHelperText, updateFnameHelperText] = useState("")
 
-	// validation functions for all input fields
-	function validateUsername() {
-		if (username.trim().length === 0) {
-			updateUsernameHelperText("Username can't be empty")	
-			updateUsernameError(true)
-			return false
-		} 
-		
-		updateUsernameHelperText("")
-		updateUsernameError(false)
-		return true
-	}	
-	
-	function validateEmail() {
-		let regTest = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		let em = email.trim()
- 
-		if (em.length === 0 ) {
-			updateEmailHelperText("Email can't be empty")
-			updateEmailError(true)	
-			return false
-		}
-		if (!regTest.test(em)) {
-			updateEmailHelperText("Invalid email")
-			updateEmailError(true)
-			return false
-		}
-
-		updateEmailHelperText("")
-		updateEmailError(false)
-		return true
-	}
-	
-	function validatePassword() {
-		// password can't conatin spaces
-		if (password.indexOf(" ") !== -1) {
-			updatePasswordHelperText("Password can't contain spaces")
-			updatePasswordError(true)
-			return false
-		}
-	
-		if (password.length < 8) {
-			updatePasswordHelperText("Password must be at least 8 characters")
-			updatePasswordError(true)
-			return false
-		}
-	
-		updatePasswordHelperText("")
-		updatePasswordError(false)
-		return true
-	}
-	
-
-	function validateConfirmPassword() {
-		if (confirmPassword !== password) {
-			updateConfirmPasswordHelperText("Password's don't match")
-			updateConfirmPasswordError(true)
-			return false
-		}
-		
-		updateConfirmPasswordHelperText("")
-		updateConfirmPasswordError(false)
-		return true
-	}
-		
-	function validateFname() {
-		if (fname.trim().length === 0) {
-			updateFnameHelperText("Name can't be empty")	
-			updateFnameError(true)
-			return false
-		} 
-		
-		updateFnameHelperText("")
-		updateFnameError(false)
-		return true
-	}
-
 	// function to submit the credentials to the backend
 	async function handleSubmit() {
-		let r1 = validateUsername() 
-		let r2 = validateEmail() 
-		let r3 = validatePassword()
-		let r4 = validateConfirmPassword()
+		// remove trailing spaces from 'Full Name' and 'Username'
+		updateUsername(username.trim())
+		updateFname(fname.trim())
+
+		let r1 = validateUsername(username, updateUsernameHelperText, updateUsernameError) 
+		let r2 = validateEmail(email, updateEmailHelperText, updateEmailError) 
+		let r3 = validatePassword(password, updatePasswordHelperText, updatePasswordError)
+		let r4 = validateConfirmPassword(confirmPassword, password, updateConfirmPasswordHelperText, updateConfirmPasswordError)
 		let r5 = true
 	
 		if (params && params.role !== "client") {
 			r5 = validateFname()	
 		}
 	
-		if (r1 && r2 && r3 && r4 && r5) {
-			let name_tr = username.trim()
-			let credentials = {fullname: fname, role: params.role, username: name_tr, email, password} 	
+		if (r1 && r2 && r3 && r4 && r5) {	
+			let credentials = {fullname: fname, role: params.role, username, email, password} 	
 			console.log("submitting form ... ")
 			console.log(credentials)	
 
