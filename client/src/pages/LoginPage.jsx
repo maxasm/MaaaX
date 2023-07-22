@@ -5,6 +5,8 @@ import Stack from "@mui/material/Stack"
 import FormControlLabel from "@mui/material/FormControlLabel"
 import Checkbox from "@mui/material/Checkbox"
 import Button from "@mui/material/Button"
+import FormHelperText from "@mui/material/FormHelperText"
+import Alert from "@mui/material/Alert"
 
 /** components **/
 import PasswordInput from "../components/PasswordInput"
@@ -20,21 +22,8 @@ import {useLocation, useRoute} from "wouter"
 
 
 async function uploadData(data) {
-	let res = await fetch("/login",
-		{
-			method: "POST",
-			headers: {
-				"Content-Type": "text/json",
-			},	
-			body: JSON.stringify(data) 
-		}
-	)	
+		
 	
-	if (res.OK) {
-		console.log("Logged in successfully")
-	} else {
-		console.log("There was an error logging in to MaaaX")	
-	}	
 }
 
 const LoginPage = () => {
@@ -53,6 +42,9 @@ const LoginPage = () => {
 	const [passwordError, updatePasswordError] = useState(false)
 
 	const [rememberLogin, updateRememberLogin] = useState(false)
+	
+	const [formErrorMsg, updateFormErrorMsg] = useState("")
+	const [formError, updateFormError] = useState(false)
 	
 	// Todo:
 	const [role, updateRole] = useState("")
@@ -81,7 +73,25 @@ const LoginPage = () => {
 		
 		if (c1 && c2) {
 			let data = {username, password, rememberLogin, role}
-			uploadData(data)	
+			let res = await fetch("/login",
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "text/json",
+					},	
+					body: JSON.stringify(data) 
+				}
+			)
+				
+			if (res.ok) {
+				console.log("Logged in")
+				updateFormErrorMsg("")
+				updateFormError(false)
+			} else {
+				console.log("Failed to log in")	
+				updateFormErrorMsg("Invalid username or password")
+				updateFormError(true)
+			}
 		} else {
 			console.log("Error in log in form")
 		}
@@ -124,6 +134,8 @@ const LoginPage = () => {
 					useOnChange={updatePassword}
 					label="Password"
 				/>
+					
+				{formError && <Alert severity="warning"> {formErrorMsg} </Alert>}
 				<FormControlLabel
 					label="Remember me"
 					control={<Checkbox/>}

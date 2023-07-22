@@ -101,6 +101,7 @@ const SignUp = ()=> {
 			if (sub_res.ok) {
 				console.log("Form submitted successfully.")
 			} else {
+					// Todo: Check if the username is taken across all 3 colletions
 				if (sub_res.status === 409) {
 					// a user with the same username already exists
 					updateUsernameHelperText("The username is already taken")
@@ -114,6 +115,7 @@ const SignUp = ()=> {
 	}
 
 
+	// Todo: Add an <Alert/> to show errors in the form
 	return (
 		<Stack direction="column" alignItems="center" sx={{margin: "20px auto", maxWidth: "400px", border: "1px solid black"}}>
 			<Typography sx={{fontSize: "32px"}}> Create {params && params.role} Account  </Typography>

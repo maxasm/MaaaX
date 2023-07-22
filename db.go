@@ -36,14 +36,13 @@ func connect_to_database() {
 func addUser(user *User) error {
 	user_role := user.Role
 	collection := db_client.Database("maxusers").Collection(user_role)
-	result, err_result := collection.InsertOne(context.TODO(), *user)
+	_, err_result := collection.InsertOne(context.TODO(), *user)
 
 	if err_result != nil {
 		errorLogger.Printf("Error inserting item in database: %s\n", err_result)
 		return err_result
 	}
 	
-	debugLogger.Printf("Added new user to database.\n%s\n", indentJSON(result))
 	return nil
 }
 
@@ -55,10 +54,8 @@ func isUsernameUnique(user *User) bool {
 	
 	res := collection.FindOne(context.TODO(), bson.D{{"username", username}})
 		
-	var resBSON bson.M
-	err_bson := res.Decode(&resBSON)
-
-	debugLogger.Printf("Find results.\n%v\n", indentJSON(resBSON))
+	var res_bson bson.M
+	err_bson := res.Decode(&res_bson)
 
 	if err_bson != nil {
 		// this means there was no matching document
@@ -78,8 +75,8 @@ func findUserByUsername(user *User) (*User,error) {
 	collection := db_client.Database("maxusers").Collection(user.Role)
 	res := collection.FindOne(context.TODO(), bson.D{{"username", user.Username}})
 	
-	var resBSON bson.M 
-	err_decode := res.Decode(&resBSON)
+	var res_bson bson.M 
+	err_decode := res.Decode(&res_bson)
 	
 	if err_decode != nil {
 		if err_decode == mongo.ErrNoDocuments {
@@ -88,22 +85,19 @@ func findUserByUsername(user *User) (*User,error) {
 		return nil, err_decode
 	}
 	
-	debugLogger.Printf("Login find results -> %s\n", indentJSON(resBSON))
-	dbUser := &User{}
-	
 	// convert bson -> []byte
-	data, err_marshal := bson.Marshal(resBSON)
+	data, err_marshal := bson.Marshal(res_bson)
 	if err_marshal != nil {
 		return nil, err_marshal
 	}
 
-	err_unmarshal := bson.Unmarshal(data, dbUser)
+	db_user := &User{}
+	err_unmarshal := bson.Unmarshal(data, db_user)
 	
 
 	if err_unmarshal != nil {
 		return nil, err_unmarshal
 	}
 
-	debugLogger.Printf("Reconstructed user -> %s\n", indentJSON(dbUser))
-	return dbUser, nil 
+	return db_user, nil 
 }

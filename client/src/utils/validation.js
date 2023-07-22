@@ -1,3 +1,4 @@
+// Todo: in validation remove characters such as '@'
 export function validateUsername(username, updateUsernameHelperTextFn, updateUsernameErrorFn) {
 	if (username.trim().length === 0) {
 		updateUsernameHelperTextFn("username can't be empty")	
