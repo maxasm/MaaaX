@@ -7,6 +7,8 @@ import (
 	"context"
 	"time"
 	"os"
+	"errors"
+	"strings"
 )
 
 var db_client *mongo.Client
@@ -70,25 +72,26 @@ func isUsernameUnique(user *User) bool {
 	return false 
 }
 
-
-func findUserByUsername(user *User) (*User,error) {
+func getUserFromUsername(user *User) (*User) {
 	collection := db_client.Database("maxusers").Collection(user.Role)
 	res := collection.FindOne(context.TODO(), bson.D{{"username", user.Username}})
+	
+	debugLogger.Printf("getUser() userrole -> %s userid -> %s\n", user.Role, user.ID)
 	
 	var res_bson bson.M 
 	err_decode := res.Decode(&res_bson)
 	
 	if err_decode != nil {
 		if err_decode == mongo.ErrNoDocuments {
-			return nil, nil
+			return nil
 		}	
-		return nil, err_decode
+		return nil
 	}
 	
 	// convert bson -> []byte
 	data, err_marshal := bson.Marshal(res_bson)
 	if err_marshal != nil {
-		return nil, err_marshal
+		return nil
 	}
 
 	db_user := &User{}
@@ -96,8 +99,69 @@ func findUserByUsername(user *User) (*User,error) {
 	
 
 	if err_unmarshal != nil {
-		return nil, err_unmarshal
+		return nil
 	}
 
-	return db_user, nil 
+	return db_user 
+}
+
+
+
+func getUserFromID(user *User) (*User) {
+	collection := db_client.Database("maxusers").Collection(user.Role)
+	res := collection.FindOne(context.TODO(), bson.D{{"id", user.ID}})
+	
+	debugLogger.Printf("getUser() userrole -> %s userid -> %s\n", user.Role, user.ID)
+	
+	var res_bson bson.M 
+	err_decode := res.Decode(&res_bson)
+	
+	if err_decode != nil {
+		if err_decode == mongo.ErrNoDocuments {
+			return nil
+		}	
+		return nil
+	}
+	
+	// convert bson -> []byte
+	data, err_marshal := bson.Marshal(res_bson)
+	if err_marshal != nil {
+		return nil
+	}
+
+	db_user := &User{}
+	err_unmarshal := bson.Unmarshal(data, db_user)
+	
+
+	if err_unmarshal != nil {
+		return nil
+	}
+
+	return db_user 
+}
+
+func isIDUnique(id string, role string) (bool, error) {
+	if !(role == "client" || role == "writer" || role == "admin") {
+		return false, errors.New("Invalid role")	
+	}
+
+	if len(strings.Trim(id, " ")) == 0 {
+		return false, errors.New("ID is empty")
+	}
+	
+	collection := db_client.Database("maxusers").Collection(role)
+	
+	res := collection.FindOne(context.TODO(), bson.D{{"id", id}})
+
+	var res_bson bson.M
+	err_decode := res.Decode(&res_bson)	
+	
+	if err_decode != nil {
+		if err_decode == mongo.ErrNoDocuments {
+			return true, nil
+		}
+		return false, err_decode
+	}
+	
+	return false, nil
 }

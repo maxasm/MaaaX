@@ -26,11 +26,11 @@ import {validateUsername, validateEmail, validatePassword, validateConfirmPasswo
 
 const SignUp = ()=> {
 	const [match, params] = useRoute("/signup/:role")
-	const [location, updateLocation] = useLocation()
+	const [location, redirect] = useLocation()
 	
 	useEffect(()=> {
 		if (!((params.role === "admin") || (params.role === "client") || (params.role === "writer"))) {
-			updateLocation("/signup/writer")	
+			redirect("/signup/writer")	
 			return
 		}
 	}, [])
@@ -80,14 +80,11 @@ const SignUp = ()=> {
 		let r5 = true
 	
 		if (params && params.role !== "client") {
-			r5 = validateFname()	
+			r5 = validateFname(fname, updateFnameHelperText, updateFnameError)
 		}
 	
 		if (r1 && r2 && r3 && r4 && r5) {	
 			let credentials = {fullname: fname, role: params.role, username, email, password} 	
-			console.log("submitting form ... ")
-			console.log(credentials)	
-
 			// POST the credentials
 			let sub_res = await fetch("/signup",
 			{
@@ -98,17 +95,21 @@ const SignUp = ()=> {
 				body: JSON.stringify(credentials),
 			})
 			
-			if (sub_res.ok) {
-				console.log("Form submitted successfully.")
-			} else {
-					// Todo: Check if the username is taken across all 3 colletions
-				if (sub_res.status === 409) {
+			let res_status = sub_res.status
+			let redirect_url = await sub_res.text()
+			 	
+			switch(res_status) {
+				case 200:
+					console.log("successful sign up")
+					console.log("redirecting to: ", redirect_url)
+					redirect(redirect_url)
+					break
+				case 409:
 					// a user with the same username already exists
 					updateUsernameHelperText("The username is already taken")
 					updateUsernameError(true)
-				}	
-			}	
-						
+			}
+
 		} else {
 			console.log("there is an error in the form.")	
 		}
@@ -128,7 +129,7 @@ const SignUp = ()=> {
 						variant="outlined"
 						label="Full Name"
 						type="text"
-						onBlur={()=> {validateFname()}}
+						onBlur={()=> {validateFname(fname, updateFnameHelperText, updateFnameError)}}
 					/>	
 					: null))}
 				<TextField

@@ -32,11 +32,7 @@ func createNewUser(json_data []byte) (*User, error) {
 	user.Password = phash
 
 	// generate ID
-	id, err_id := generateID()
-	if err_id != nil {
-		errorLogger.Printf("Error generating ID\n")
-		return nil, err_id
-	}
+	id := generateID(2, user.Role)
 
 	user.ID = id
 	return user, nil

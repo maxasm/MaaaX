@@ -20,12 +20,6 @@ import {validatePassword} from "../utils/validation"
 /** routing **/
 import {useLocation, useRoute} from "wouter"
 
-
-async function uploadData(data) {
-		
-	
-}
-
 const LoginPage = () => {
 	// check the role
 	const [match, params] = useRoute("/login/:role")
@@ -41,7 +35,8 @@ const LoginPage = () => {
 	const [usernameError, updateUsernameError] = useState(false)
 	const [passwordError, updatePasswordError] = useState(false)
 
-	const [rememberLogin, updateRememberLogin] = useState(false)
+	// Todo: rememberLogin should alway be true
+	const [rememberLogin, updateRememberLogin] = useState(true)
 	
 	const [formErrorMsg, updateFormErrorMsg] = useState("")
 	const [formError, updateFormError] = useState(false)
@@ -50,6 +45,7 @@ const LoginPage = () => {
 	const [role, updateRole] = useState("")
 	
 	useEffect(()=>{
+		// Todo: send a GET request to check if the user is 'Authenticated' using JWT
 		// set the user 'role'
 		updateRole(params.role)
 		
@@ -71,6 +67,7 @@ const LoginPage = () => {
 		let c1 = validateUsername(username, updateUsernameHelperText, updateUsernameError)
 		let c2 = validatePassword(password, updatePasswordHelperText, updatePasswordError)
 		
+
 		if (c1 && c2) {
 			let data = {username, password, rememberLogin, role}
 			let res = await fetch("/login",
@@ -87,6 +84,11 @@ const LoginPage = () => {
 				console.log("Logged in")
 				updateFormErrorMsg("")
 				updateFormError(false)
+				let url = await res.text()
+				console.log("redirecting to -> ", url)
+	
+				// redirect to the userpage
+				updateLoc(url)
 			} else {
 				console.log("Failed to log in")	
 				updateFormErrorMsg("Invalid username or password")
@@ -112,9 +114,10 @@ const LoginPage = () => {
 		return true
 	}
 
+	
 	return (
 		<Stack direction="column" sx={{margin: "20px auto", border: "1px solid black", maxWidth: "400px", alignItems: "center"}}>
-			<Typography sx={{fontSize: "32px"}}> Log in to {role ? role : "MaaaX" } Account </Typography>
+			<Typography sx={{fontSize: "32px"}}> Log In </Typography>
 			<Stack directon="column" spacing={2} alignItems="spread" useFlexGap sx={{margin: "10px 0px", width: "65%"}}>
 				<TextField
 					type="text"
@@ -138,9 +141,11 @@ const LoginPage = () => {
 				{formError && <Alert severity="warning"> {formErrorMsg} </Alert>}
 				<FormControlLabel
 					label="Remember me"
-					control={<Checkbox/>}
-					value={rememberLogin}
-					onChange={()=> {updateRememberLogin(!rememberLogin)}}
+					control={
+						<Checkbox
+							checked={rememberLogin}
+							onChange={()=> {updateRememberLogin(!rememberLogin)}} />
+					 }
 				/>
 				<Button
 					variant="contained"

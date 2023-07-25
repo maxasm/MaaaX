@@ -1,4 +1,4 @@
-module github.com/maxasm/MaaaX-server
+module github.com/maxasm/MaaaX
 
 go 1.20
 

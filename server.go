@@ -1,4 +1,3 @@
-// the websever + websocekets
 package main
 
 import (
@@ -9,7 +8,6 @@ import (
 	"os"
 	"encoding/json"
 	"time"
-	"github.com/golang-jwt/jwt/v4"
 )
 
 const PORT = 8080
@@ -43,136 +41,143 @@ func handleSPA(c echo.Context) error {
 
 	if err_f != nil {
 		errorLogger.Printf("%s\n", err_f)
-		c.String(http.StatusInternalServerError, "500 InternalServerError")
-		return err_f
+		c.NoContent(http.StatusInternalServerError)
+		return nil 
 	}
 	return nil
 }
 
-func handleUserSignup(c echo.Context) error {
-	eventLogger.Printf("POST creating new user ... \n")
 
+func handleUserSignup(c echo.Context) error {
 	data, err_data := io.ReadAll(c.Request().Body)
 	if err_data != nil {
 		errorLogger.Printf("%s\n", err_data)
-		return err_data
+		return nil
 	}
 
 	user, err_create_user := createNewUser(data)
 
 	if err_create_user != nil {
 		errorLogger.Printf("Error creating new user -> %s\n", err_create_user)
-		c.String(http.StatusInternalServerError, "Error creating new user")
-		return err_create_user
+		c.NoContent(http.StatusInternalServerError)
+		return nil
 	}
 	
 	// check if a user with the same username exists
 	if !isUsernameUnique(user) {
-		c.String(http.StatusConflict, "Username is not unique")	
-		eventLogger.Printf("http.StatusConflict 409 username is not unique")
+		c.NoContent(http.StatusConflict)	
 		return nil
 	}
 	
 	// add the user to the database
 	if err_add_user := addUser(user); err_add_user != nil {
-		c.String(http.StatusInternalServerError, "Internal Server Error")
+		c.NoContent(http.StatusInternalServerError)
 		errorLogger.Printf("error adding user to the database\n", err_add_user)
 		return err_add_user
 	}
 		
 	debugLogger.Printf("created new user:\n %s", indentJSON(*user))
-	c.String(http.StatusOK, fmt.Sprintf("successfully created new user: %s\n", user.Username))
+	// redirect the user to log in after signing up
+	redirect_url := fmt.Sprintf("/login/%s/", user.Role)
+	c.String(http.StatusOK, redirect_url)
 	return nil
 }
 
-
-// generate and send JWT
-func generateJWT(c echo.Context, user *User) (error) {
-	// get the signing key
-	JWT_KEY := getJWTKey()
-
-	// token expires 5 mins from now 
-	token_exp := time.Now().Add(time.Second * 30)
-
-	userToken := UserToken{
-		Username: user.Username,
-		UserID:user.ID,
-		UserRole:user.Role,
-		RegisteredClaims: jwt.RegisteredClaims {
-			ExpiresAt: jwt.NewNumericDate(token_exp), 
-		},	
-	}	
-	
-	token_with_claims := jwt.NewWithClaims(jwt.SigningMethodHS256, userToken)
-	
-	jwt_token, err_jwt_token := token_with_claims.SignedString(JWT_KEY)
-	if err_jwt_token != nil {
-		errorLogger.Printf("error signing JWT with key. %s\n", err_jwt_token)	
-		return err_jwt_token
-	}
-	
-	debugLogger.Printf("generated JWT -> %s\n", jwt_token)
-	
-	// write the token to cookies
-	c.SetCookie(&http.Cookie{
-		Name: "token",
-		Value: jwt_token,
-		Expires: token_exp,
-	})
-	
-	return nil
-}
 
 func handleUserLogin(c echo.Context) error {
 	// read the request body
 	data, err_data := io.ReadAll(c.Request().Body)
 	if err_data != nil {
 		errorLogger.Printf("error reading request body: %s\n", err_data)
-		c.String(http.StatusInternalServerError, "Internal Serever Error")
-		return err_data
+		c.NoContent(http.StatusInternalServerError)
+		return nil 
 	}
 	
 	user := &User{}
 	 
 	if err_user := json.Unmarshal(data, user); err_user != nil {
 		errorLogger.Printf("error on json.Unmarhsal(): %s\n", err_user)
-		c.String(http.StatusInternalServerError, "Internal Server Error")
-		return err_user
+		c.NoContent(http.StatusInternalServerError)
+		return nil 
 	}
 	
 	debugLogger.Printf("log in request from '%s' with role '%s'\n", user.Username, user.Role)
-	// get the user with the given username
-	db_user, err_db_user := findUserByUsername(user)
+	// get user using ID
+	db_user := getUserFromUsername(user)
 
-	if err_db_user != nil {
-		errorLogger.Printf("error finding user in database: %s\n", err_db_user)
-		c.String(http.StatusInternalServerError, "Internal Serever Error")
-		return err_db_user
-	}
-	
 	if db_user != nil {
 		// check if the password's match
 		if compareHash(db_user.Password, user.Password) {
 			// remember login by sending JWT
 			if user.RememberLogin {
-				err_gen_jwt := generateJWT(c, db_user)
+				err_gen_jwt := sendJWT(&c, db_user, time.Minute * 10)
 				if err_gen_jwt != nil {
-					c.String(http.StatusInternalServerError, "Internal Server Error")
-					return err_gen_jwt
+					c.NoContent(http.StatusInternalServerError)
+					return nil 
 				}
 			}
 
 			debugLogger.Printf("user '%s' successfull login\n", user.Username)
-			// just log in
-			c.String(http.StatusOK, "Successfull login")
+			// redirect to the following URL if succesffully logged in 
+			redirectURL := fmt.Sprintf("/user/%s/%s", db_user.Role, db_user.ID)
+			c.String(http.StatusOK,redirectURL) 
 			return nil
 		}	
 	}
 
 	debugLogger.Printf("user '%s' failed to log in successfully\n", user.Username)
-	c.String(http.StatusUnauthorized, "Invalid Username and Password")
+	c.NoContent(http.StatusUnauthorized)
 	return nil
 }
+
+// TODO: refactor and break up code
+func handleGetUserData(c echo.Context) error {
+	// check if the user is authenticated
+	req_user := validateRequest(c)	
+	
+	if req_user == nil {
+		c.NoContent(http.StatusUnauthorized)
+		return nil
+	}
+	
+	// check if a user with the given 'username' and 'role' 
+	user := getUserFromID(&User{
+		ID: req_user.UserID,	
+		Role: req_user.UserRole,
+	})	
+	
+	// if the user does not exist in the database	
+	if user == nil {
+		c.NoContent(http.StatusUnauthorized)	
+		return nil
+	}
+	
+	// hide the Password
+	user.Password = ""
+
+	// auto renew the token
+	autoRenewToken(c,req_user)
+
+	// convert the user data as JSON
+	user_as_json, err_user_as_json := json.Marshal(user)
+	
+	if err_user_as_json != nil {
+		errorLogger.Printf("error converting type user to JSON string\n")
+		c.NoContent(http.StatusInternalServerError)
+		return nil
+	}
+
+	user_as_json_str := string(user_as_json)
+	c.JSON(http.StatusOK, user_as_json_str)
+	return nil
+}
+
+func handleUserLogout(c echo.Context) error {
+	// send a new token with a 'nil' user and expiry of time.Now()
+	sendJWT(&c, &User{}, time.Second * 0)	
+	return nil
+} 
+
 
 func start_server() {
 	e := echo.New()
@@ -185,6 +190,11 @@ func start_server() {
 
 	// handle user login
 	e.POST("/login", handleUserLogin)
+	
+	// get data about the user
+	e.POST("/getuserdata", handleGetUserData) 
+	
+	e.POST("/logout", handleUserLogout)
 
 	// start the server
 	err_start := e.Start(fmt.Sprintf(":%d", PORT))

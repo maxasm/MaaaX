@@ -74,4 +74,3 @@ export function validateFname(fname, updateFnameHelperTextFn, updateFnameErrorFn
 	return true
 }
 
-
