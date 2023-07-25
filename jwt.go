@@ -22,7 +22,6 @@ func getJWTKey() []byte {
 
 
 type UserToken struct {
-	Username string `json:"username,omitempty"`
 	UserRole string `json:"userrole,omitempty"`
 	UserID string `json:"userid,omitempty"`
 	jwt.RegisteredClaims 	
@@ -70,7 +69,6 @@ func sendJWT(c *echo.Context, user *User, t time.Duration) (error) {
 	token_exp := time.Now().Add(t)
 
 	userToken := UserToken{
-		Username: user.Username,
 		UserID:user.ID,
 		UserRole:user.Role,
 		RegisteredClaims: jwt.RegisteredClaims {
@@ -104,7 +102,6 @@ func autoRenewToken(c echo.Context, user_token *UserToken) {
 	expiry := user_token.ExpiresAt 
 	if time.Now().Add(time.Second * 60).Compare(expiry.Time) == 1 {
 		sendJWT(&c, &User{
-			Username: user_token.Username,
 			ID: user_token.UserID,
 			Role: user_token.UserRole,
 		},

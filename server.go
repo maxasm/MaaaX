@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+// TODO: mimic email sending verification codes
+// TODO: implement password reset and email verification
 const PORT = 8080
 
 // serve single-page applications

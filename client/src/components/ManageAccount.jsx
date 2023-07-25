@@ -4,7 +4,7 @@ import TextField from "@mui/material/TextField"
 import Button from "@mui/material/Button"
 
 /** utils **/
-import {validateUsername} from "../utils/validation"
+import {validateUsername, validateEmail} from "../utils/validation"
 
 /** react **/
 import {useState, useEffect} from "react"
@@ -15,7 +15,14 @@ const ManageAccount = ({user})=> {
 	const [usernameError, updateUsernameError] = useState(false)
 	const [usernameHelperText, updateUsernameHelperText] = useState("")
 
-	useEffect(()=>{updateUsername(user.username)},[])
+	const [email, updateEmail] = useState("")
+	const [emailError, updateEmailError] = useState("")
+	const [emailHelperText, updateEmailHelperText] = useState("")
+
+	useEffect(()=>{
+		updateUsername(user.username)
+		updateEmail(user.email)
+	},[])
 
 	return (
 		<Stack
@@ -30,6 +37,14 @@ const ManageAccount = ({user})=> {
 				onBlur={()=>{validateUsername(username, updateUsernameHelperText, updateUsernameError)}}
 				onChange={(e)=> {updateUsername(e.target.value)}}
 				label="Username"/>
+			<TextField
+				value={email}
+				error={emailError}	
+				helperText={emailHelperText}
+				onBlur={()=>{validateEmail(email, updateEmailHelperText, updateEmailError)}}
+				onChange={(e)=> {updateEmail(e.target.value)}}
+				label="Email"
+			/>
 			<Button sx={{marginTop: "10px"}} variant="outlined"> Submit Changes </Button>
 		</Stack>
 	)

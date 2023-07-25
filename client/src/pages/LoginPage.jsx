@@ -150,6 +150,7 @@ const LoginPage = () => {
 				<Button
 					variant="contained"
 					onClick={handleFormSubmit}> Log In </Button>
+				<Button> Forgot Password </Button>
 			</Stack>
 		</Stack>	
 	) 

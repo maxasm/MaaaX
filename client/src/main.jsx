@@ -13,7 +13,7 @@ import LoginPage from "./pages/LoginPage"
 import HomePage from "./pages/HomePage"
 import PageNotFound from "./pages/PageNotFound"
 import SignUp from "./pages/SignUp"
-import UserPage from "./pages/UserPage"
+import Dashboard from "./pages/Dashboard"
 
 // css
 import "./css/style.css"
@@ -27,7 +27,7 @@ const App = ()=> {
 				<Route path="/" component={HomePage}/>
 				<Route path="/login/:role" component={LoginPage}/>
 				<Route path="/signup/:role" component={SignUp}/>
-				<Route path="/user/:role/:id" component={UserPage}/>
+				<Route path="/user/:role/:id" component={Dashboard}/>
 				<Route component={PageNotFound}/>
 			</Switch>
 		</>
