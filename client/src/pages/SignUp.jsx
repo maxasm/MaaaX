@@ -1,28 +1,20 @@
+/** MUI **/
 import Typography from "@mui/material/Typography"
 import Stack from "@mui/material/Stack"
 import TextField from "@mui/material/TextField"
-import FormControl from "@mui/material/FormControl"
-import FormControlLabel from "@mui/material/FormControlLabel"
-import Radio from "@mui/material/Radio"
-import RadioGroup from "@mui/material/RadioGroup"
-import FormLabel from "@mui/material/FormLabel"
 import Button from "@mui/material/Button"
-import OutlinedInput from "@mui/material/OutlinedInput"
-import InputLabel from "@mui/material/InputLabel"
-import InputAdornment from "@mui/material/InputAdornment"
-import IconButton from "@mui/material/IconButton"
-import VisibilityOff from "@mui/icons-material/VisibilityOff"
-import Visibility from "@mui/icons-material/Visibility"
-import FormHelperText from "@mui/material/FormHelperText"
-import Snackbar from "@mui/material/Snackbar" 
-import PasswordInput from "../components/PasswordInput"
 
+/** react **/
 import {useState, useEffect} from "react"
 
-import {useRoute} from "wouter"
-import {useLocation} from "wouter"
+/** routing **/
+import {useRoute, useLocation} from "wouter"
 
+/** form validation **/
 import {validateUsername, validateEmail, validatePassword, validateConfirmPassword, validateFname} from "../utils/validation"
+
+/** components **/
+import PasswordInput from "../components/PasswordInput"
 
 const SignUp = ()=> {
 	const [match, params] = useRoute("/signup/:role")
@@ -30,12 +22,12 @@ const SignUp = ()=> {
 	
 	useEffect(()=> {
 		if (!((params.role === "admin") || (params.role === "client") || (params.role === "writer"))) {
-			redirect("/signup/writer")	
+			redirect("/404")	
 			return
 		}
 	}, [])
 	
-	// if the role is admin/writer -> add Fullname filed
+	// if the role is admin/writer -> add Fullname field
 	const [fname, updateFname] = useState("")
 	
 	// state management for the values of the input fields

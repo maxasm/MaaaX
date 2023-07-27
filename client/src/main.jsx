@@ -14,10 +14,10 @@ import HomePage from "./pages/HomePage"
 import PageNotFound from "./pages/PageNotFound"
 import SignUp from "./pages/SignUp"
 import Dashboard from "./pages/Dashboard"
+import EmailVerification from "./pages/EmailVerification"
 
 // css
 import "./css/style.css"
-
 
 const App = ()=> {
 	return (
@@ -28,6 +28,7 @@ const App = ()=> {
 				<Route path="/login/:role" component={LoginPage}/>
 				<Route path="/signup/:role" component={SignUp}/>
 				<Route path="/user/:role/:id" component={Dashboard}/>
+				<Route path="/verifyemail/:role/:id" component={EmailVerification}/>
 				<Route component={PageNotFound}/>
 			</Switch>
 		</>
