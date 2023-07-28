@@ -48,11 +48,6 @@ const LoginPage = () => {
 		// Todo: send a GET request to check if the user is 'Authenticated' using JWT
 		// set the user 'role'
 		updateRole(params.role)
-		
-		if (!((params.role === "client") || (params.role === "writer") || (params.role === "admin"))) {
-			updateLoc("/login/client")
-			return
-		}
 	}, [])	
 	
 
@@ -113,7 +108,6 @@ const LoginPage = () => {
 		updateUsernameError(false)
 		return true
 	}
-
 	
 	return (
 		<Stack direction="column" sx={{margin: "20px auto", border: "1px solid black", maxWidth: "400px", alignItems: "center"}}>
@@ -150,7 +144,7 @@ const LoginPage = () => {
 				<Button
 					variant="contained"
 					onClick={handleFormSubmit}> Log In </Button>
-				<Button> Forgot Password </Button>
+				<Button onClick={()=> {updateLoc(`/resetpassword/${params.role}/`)}}> Forgot Password </Button>
 			</Stack>
 		</Stack>	
 	) 

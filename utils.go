@@ -4,9 +4,10 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
-	"github.com/labstack/echo/v4"
 	"io"
 	"strings"
+
+	"github.com/labstack/echo/v4"
 )
 
 func generateID(no_bytes int, role string) string {
@@ -64,4 +65,21 @@ func validateRequest(c echo.Context) *UserToken {
 	}
 
 	return nil
+}
+
+func getUserFromRequest(c echo.Context) *User {
+	// get the user role and id
+	data, err_data := io.ReadAll(c.Request().Body)
+	if err_data != nil {
+		return nil
+	}
+
+	user := &User{}
+	err_unmarshal := json.Unmarshal(data, user)
+
+	if err_unmarshal != nil {
+		return nil
+	}
+
+	return user
 }

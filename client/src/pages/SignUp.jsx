@@ -20,13 +20,6 @@ const SignUp = ()=> {
 	const [match, params] = useRoute("/signup/:role")
 	const [location, redirect] = useLocation()
 	
-	useEffect(()=> {
-		if (!((params.role === "admin") || (params.role === "client") || (params.role === "writer"))) {
-			redirect("/404")	
-			return
-		}
-	}, [])
-	
 	// if the role is admin/writer -> add Fullname field
 	const [fname, updateFname] = useState("")
 	
@@ -35,9 +28,6 @@ const SignUp = ()=> {
 	const [confirmPassword, updateConfirmPassword] = useState("")
 	const [username, updateUsername] = useState("")
 	const [email, updateEmail] = useState("")
-
-	// control showing and hiding password
-	const [showPswd, setShowPswd] = useState(true)
 
 	// helper function for managing state of all input fields
 	function handleOnChange(e, updateFn) {

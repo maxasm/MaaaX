@@ -3,11 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/labstack/echo/v4"
 	"io"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/labstack/echo/v4"
 )
 
 // TODO: mimic email sending verification codes
@@ -78,13 +79,12 @@ func handleUserSignup(c echo.Context) error {
 	}
 
 	debugLogger.Printf("created new user:\n %s", indentJSON(*user))
-		
-	// TODO: send the following link to email 
+
+	// TODO: send the following link to email
 	debugLogger.Printf("email verfication code for user %s is %s\n", user.Username, user.Code)
 	c.String(http.StatusOK, fmt.Sprintf(`/verifyemail/%s/%s`, user.Role, user.ID))
 	return nil
 }
-
 
 // TODO: check if the user has verrified the email if not -> /validateemail
 func handleUserLogin(c echo.Context) error {
@@ -182,52 +182,52 @@ func handleUserLogout(c echo.Context) error {
 }
 
 func handleVerifyEmail(c echo.Context) error {
-	data, err_data := io.ReadAll(c.Request().Body)	
-	
+	data, err_data := io.ReadAll(c.Request().Body)
+
 	if err_data != nil {
-		c.NoContent(http.StatusInternalServerError)	
-		return nil
-	}
-	
-	user := &User{}
-	err_unmarshal := json.Unmarshal(data, user)
-	
-	if err_unmarshal != nil {
-		errorLogger.Printf("%s\n", err_unmarshal)	
 		c.NoContent(http.StatusInternalServerError)
 		return nil
 	}
-	
+
+	user := &User{}
+	err_unmarshal := json.Unmarshal(data, user)
+
+	if err_unmarshal != nil {
+		errorLogger.Printf("%s\n", err_unmarshal)
+		c.NoContent(http.StatusInternalServerError)
+		return nil
+	}
+
 	// get the user from the database
 	db_user := getUserFromID(user)
-	
+
 	if db_user == nil {
 		errorLogger.Printf("trying to verify email of a non-existent user:\n%s\n", indentJSON(user))
 		c.String(http.StatusBadRequest, "user does not exist")
 		return nil
 	}
-	
+
 	// check if the email if already verified
 	if db_user.Verified {
 		c.String(http.StatusBadRequest, "Email already verified")
 		return nil
 	}
-	
+
 	// check if the code is ok
 	if user.Code != db_user.Code {
 		c.String(http.StatusBadRequest, "Invalid code")
 		return nil
-	} 
-	
+	}
+
 	// set the user to verified
-	ver := setVerified(user,true)
-		
+	ver := setVerified(user, true)
+
 	if !ver {
 		c.NoContent(http.StatusInternalServerError)
 		return nil
 	}
-	
-	c.String(http.StatusOK,"Email verified")
+
+	c.String(http.StatusOK, "Email verified")
 	return nil
 }
 
@@ -239,30 +239,34 @@ func handleGetEmailStatus(c echo.Context) error {
 		c.NoContent(http.StatusInternalServerError)
 		return nil
 	}
-	
+
 	// get the user from the data
 	user := &User{}
-	
+
 	err_unmarshal := json.Unmarshal(data, user)
-	
+
 	if err_unmarshal != nil {
 		c.NoContent(http.StatusInternalServerError)
 		return nil
 	}
-		
+
 	// get user from db
 	db_user := getUserFromID(user)
-	
+
 	if db_user == nil {
-		c.NoContent(http.StatusBadRequest)
+		c.String(http.StatusBadRequest, "UDNE")
 		return nil
-	}	
-	
+	}
+
 	resp_user := &User{
-		Email: db_user.Email,
 		Verified: db_user.Verified,
 	}
-	
+
+	// only set the email if the user is not verified
+	if !db_user.Verified {
+		resp_user.Email = db_user.Email
+	}
+
 	c.JSON(http.StatusOK, resp_user)
 	return nil
 }
@@ -270,61 +274,119 @@ func handleGetEmailStatus(c echo.Context) error {
 func handleResendEmailCode(c echo.Context) error {
 	// get the user
 	data, err_data := io.ReadAll(c.Request().Body)
-	
+
 	if err_data != nil {
 		c.NoContent(http.StatusInternalServerError)
 		return nil
 	}
-	
+
 	user := &User{}
-	
+
 	err_unmarshal := json.Unmarshal(data, user)
-	
+
 	if err_unmarshal != nil {
 		c.NoContent(http.StatusInternalServerError)
 		return nil
 	}
-	
+
 	// set a new code
 	res := setCode(user)
-	
+
 	if !res {
 		c.NoContent(http.StatusInternalServerError)
 		return nil
 	}
-	
-	c.String(http.StatusOK, "Code changed successfully")	
+
+	c.String(http.StatusOK, "Code changed successfully")
 	return nil
 }
 
 func handleResetEmail(c echo.Context) error {
 	data, err_data := io.ReadAll(c.Request().Body)
-	
+
 	if err_data != nil {
 		errorLogger.Printf("%s\n", err_data)
 		c.NoContent(http.StatusInternalServerError)
 	}
-	
+
 	user := &User{}
-	
+
 	err_unmarshal := json.Unmarshal(data, user)
-	
+
 	if err_unmarshal != nil {
 		c.NoContent(http.StatusInternalServerError)
 		return nil
 	}
-	
+
 	resp := resetEmail(user)
-	
+
 	if !resp {
 		c.NoContent(http.StatusInternalServerError)
-		return nil	
+		return nil
 	}
-	
-	
-	c.String(http.StatusOK, "email changed successfully")	
+
+	c.String(http.StatusOK, "email changed successfully")
 	return nil
-} 
+}
+
+// user has emailresetid, and role
+func handleSetNewPassword(c echo.Context) error {
+	user := getUserFromRequest(c)
+
+	if user == nil {
+		c.String(http.StatusInternalServerError, "UDNE")
+		return nil
+	}
+
+	db_user := getUserFromEmailResetID(user)
+
+	if db_user == nil {
+		c.String(http.StatusInternalServerError, "UDNE")
+		return nil
+	}
+
+	// hash the password
+	phash, _ := generateHash(user.Password)
+	db_user.Password = phash
+
+	suc := setPassword(db_user)
+
+	if !suc {
+		c.String(http.StatusInternalServerError, "Error changing password")
+		return nil
+	}
+
+	c.String(http.StatusAccepted, "Password changed successfully")
+	return nil
+}
+
+func handleSendPasswordResetLink(c echo.Context) error {
+	user := getUserFromRequest(c)
+
+	if user == nil {
+		c.String(http.StatusInternalServerError, "UDNE")
+		return nil
+	}
+
+	// ensure that the user exists
+	db_user := getUserFromEmail(user)
+
+	if db_user == nil {
+		c.String(http.StatusInternalServerError, "UDNE")
+		return nil
+	}
+
+	// create a new id for a link to reset email -> /client/setnewpassword:id
+	reset_id := generateID(4, "client")
+	// set the reset ID to the email in the database
+	db_user.EmailResetID = reset_id
+	setPasswordResetID(db_user)
+
+	// formart the reset URL
+	reset_url := fmt.Sprintf("/setnewpassword/%s/%s", user.Role, reset_id)
+
+	return c.String(http.StatusOK, reset_url)
+}
 
 func start_server() {
 	e := echo.New()
@@ -340,16 +402,18 @@ func start_server() {
 
 	// get data about the user
 	e.POST("/getuserdata", handleGetUserData)
-	
-	// API for verifying email code 
+
 	e.POST("/apiverifyemail", handleVerifyEmail)
 
-	// get whether the email is verified or not
 	e.POST("/apigetemailstatus", handleGetEmailStatus)
 
 	e.POST("/apiresendemailcode", handleResendEmailCode)
-	
+
 	e.POST("/apiresetemail", handleResetEmail)
+
+	e.POST("/apisetnewpassword", handleSetNewPassword)
+
+	e.POST("/apisendpasswordresetlink", handleSendPasswordResetLink)
 
 	e.POST("/logout", handleUserLogout)
 

@@ -74,3 +74,16 @@ export function validateFname(fname, updateFnameHelperTextFn, updateFnameErrorFn
 	return true
 }
 
+// TODO: .trim() all values
+export function validateCode(code, updateCodeHelperText, updateCodeError) {
+	
+	if (code.trim().length === 0) {
+		updateCodeHelperText("Code can't be empty")
+		updateCodeError(true)
+		return
+	}
+
+	updateCodeHelperText("")
+	updateCodeError(false)
+	return true
+}

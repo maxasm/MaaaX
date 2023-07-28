@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 )
 
+// TODO: ensure that email us unque as it is used to reset password
 type User struct {
 	Username      string  `json:"username,omitempty" bson:"username,omitempty"`
 	ID            string  `json:"id,omitempty" bson:"id,omitempty"`
@@ -17,8 +18,8 @@ type User struct {
 	Fullname      string  `json:"fullname,omitempty" bson:"fullname,omitempty"`
 	RememberLogin bool    `json:"rememberlogin,omitempty" bson:"rememberlogin,omitempty"`
 	Code          string  `json:"code,omitempty" bson:"code,omitempty"`
+	EmailResetID  string  `json:"emailresetid,omitempty" bson:"emailresetid,omitempty"`
 }
-
 
 // the data that comes from the front end {username, email, password, full name}
 func createNewUser(json_data []byte) (*User, error) {
@@ -33,9 +34,9 @@ func createNewUser(json_data []byte) (*User, error) {
 	// hash the password
 	phash, _ := generateHash(user.Password)
 	user.Password = phash
-	
+
 	// set the code for verifying the email (8 digits)
-	user.Code = generateID(4, "client")	
+	user.Code = generateID(4, "client")
 
 	// generate ID
 	id := generateID(2, user.Role)
