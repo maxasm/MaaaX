@@ -108,6 +108,7 @@ const EmailVerification = () => {
 				console.log("email verified")
 				updateSubmitting(false)
 				updateCodeSubmitionError(false)
+				redirect(`/login/${params.role}`)
 				break
 			default:
 				// get the error message sent by the server

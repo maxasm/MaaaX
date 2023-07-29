@@ -5,14 +5,13 @@ import Stack from "@mui/material/Stack"
 import FormControlLabel from "@mui/material/FormControlLabel"
 import Checkbox from "@mui/material/Checkbox"
 import Button from "@mui/material/Button"
-import FormHelperText from "@mui/material/FormHelperText"
 import Alert from "@mui/material/Alert"
 
 /** components **/
 import PasswordInput from "../components/PasswordInput"
 
 /** react **/
-import {useState, useEffect} from "react"
+import {useState} from "react"
 
 /** validation **/
 import {validatePassword} from "../utils/validation"
@@ -40,16 +39,6 @@ const LoginPage = () => {
 	
 	const [formErrorMsg, updateFormErrorMsg] = useState("")
 	const [formError, updateFormError] = useState(false)
-	
-	// Todo:
-	const [role, updateRole] = useState("")
-	
-	useEffect(()=>{
-		// Todo: send a GET request to check if the user is 'Authenticated' using JWT
-		// set the user 'role'
-		updateRole(params.role)
-	}, [])	
-	
 
 	function handleOnChange(e, updateFn) {
 		updateFn(e.target.value)	
@@ -64,7 +53,7 @@ const LoginPage = () => {
 		
 
 		if (c1 && c2) {
-			let data = {username, password, rememberLogin, role}
+			let data = {username, password, rememberLogin, role: params.role}
 			let res = await fetch("/login",
 				{
 					method: "POST",
@@ -123,6 +112,7 @@ const LoginPage = () => {
 					error={usernameError}
 					variant="outlined"
 				/>
+				
 				<PasswordInput
 					onBlur={()=> {validatePassword(password, updatePasswordHelperText, updatePasswordError)}}
 					helperText={passwordHelperText}

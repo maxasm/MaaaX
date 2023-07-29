@@ -122,7 +122,7 @@ func handleUserLogin(c echo.Context) error {
 
 			debugLogger.Printf("user '%s' successfull login\n", user.Username)
 			// redirect to the following URL if succesffully logged in
-			redirectURL := fmt.Sprintf("/vaidateemail/%s/%s", db_user.Role, db_user.ID)
+			redirectURL := fmt.Sprintf("/user/%s/%s", db_user.Role, db_user.ID)
 			c.String(http.StatusOK, redirectURL)
 			return nil
 		}
@@ -320,6 +320,9 @@ func handleResetEmail(c echo.Context) error {
 
 	resp := resetEmail(user)
 
+	// TODO: 'resend' the verification code to the new email
+	setCode(user)
+
 	if !resp {
 		c.NoContent(http.StatusInternalServerError)
 		return nil
@@ -338,11 +341,11 @@ func handleSetNewPassword(c echo.Context) error {
 		return nil
 	}
 
-	db_user := getUserFromEmailResetID(user)
+	db_user := getUserFromPasswordResetID(user)
 
 	if db_user == nil {
-		c.String(http.StatusInternalServerError, "UDNE")
-		return nil
+		errorLogger.Printf("cant get user from the database")
+		return c.String(http.StatusInternalServerError, "UDNE")
 	}
 
 	// hash the password
@@ -350,6 +353,10 @@ func handleSetNewPassword(c echo.Context) error {
 	db_user.Password = phash
 
 	suc := setPassword(db_user)
+
+	// remove the password reset id
+	db_user.PasswordResetID = ""
+	setPasswordResetID(db_user)
 
 	if !suc {
 		c.String(http.StatusInternalServerError, "Error changing password")
@@ -364,28 +371,51 @@ func handleSendPasswordResetLink(c echo.Context) error {
 	user := getUserFromRequest(c)
 
 	if user == nil {
-		c.String(http.StatusInternalServerError, "UDNE")
-		return nil
+		return c.String(http.StatusInternalServerError, "UDNE")
 	}
 
 	// ensure that the user exists
 	db_user := getUserFromEmail(user)
 
 	if db_user == nil {
-		c.String(http.StatusInternalServerError, "UDNE")
-		return nil
+		return c.String(http.StatusInternalServerError, "UDNE")
 	}
 
 	// create a new id for a link to reset email -> /client/setnewpassword:id
 	reset_id := generateID(4, "client")
 	// set the reset ID to the email in the database
-	db_user.EmailResetID = reset_id
+	db_user.PasswordResetID = reset_id
 	setPasswordResetID(db_user)
 
 	// formart the reset URL
 	reset_url := fmt.Sprintf("/setnewpassword/%s/%s", user.Role, reset_id)
+	debugLogger.Printf("the password reset ID is -> %s\n", reset_url)
 
 	return c.String(http.StatusOK, reset_url)
+}
+
+type PasswordReset struct {
+	Reset bool `json:"reset"`
+}
+
+func handleIsPasswordReset(c echo.Context) error {
+	user := getUserFromRequest(c)
+
+	if user == nil {
+		return c.String(http.StatusInternalServerError, "UDNE")
+	}
+
+	db_user := getUserFromPasswordResetID(user)
+
+	if db_user == nil {
+		debugLogger.Printf("the user does not exist in the database: PRID: %s\n", user.PasswordResetID)
+		resp := &PasswordReset{Reset: false}
+		return c.JSON(http.StatusOK, &resp)
+	}
+
+	debugLogger.Printf("the user exists in the database")
+	resp := &PasswordReset{Reset: true}
+	return c.JSON(http.StatusOK, &resp)
 }
 
 func start_server() {
@@ -414,6 +444,8 @@ func start_server() {
 	e.POST("/apisetnewpassword", handleSetNewPassword)
 
 	e.POST("/apisendpasswordresetlink", handleSendPasswordResetLink)
+
+	e.POST("/apiispasswordreset", handleIsPasswordReset)
 
 	e.POST("/logout", handleUserLogout)
 

@@ -29,11 +29,11 @@ const ResetPassword = () => {
                 body: JSON.stringify({email, role: params.role}),
             })
 
-            if (resp.ok) {
-                updateReset(true)
-            } else {
+            if (!(resp.ok)) {
                 console.error("there was an error requesting for a password reset link")
             }
+
+            updateReset(true)
         }
     }
 

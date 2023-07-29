@@ -161,14 +161,14 @@ func isIDUnique(id string, role string) (bool, error) {
 
 func setVerified(user *User, verified bool) bool {
 	collection := db_client.Database("maxusers").Collection(user.Role)
-	res, err_res := collection.UpdateOne(context.TODO(), bson.D{{"id", user.ID}}, bson.D{{"$set", bson.D{{"verified", verified}}}})
+	_, err_res := collection.UpdateOne(context.TODO(), bson.D{{"id", user.ID}}, bson.D{{"$set", bson.D{{"verified", verified}}}})
 
 	if err_res != nil {
 		errorLogger.Printf("error updating verified state in db: %s\n", err_res)
 		return false
 	}
 
-	debugLogger.Printf("updating result\n%s\n", indentJSON(res))
+	debugLogger.Printf("set email to verified")
 	return true
 }
 
@@ -179,28 +179,26 @@ func setCode(user *User) bool {
 	code := generateID(4, "client")
 	debugLogger.Printf("new generated code for user id %s is %s\n", user.ID, code)
 	// update the code in the database
-	res, err_res := collection.UpdateOne(context.TODO(), bson.D{{"id", user.ID}}, bson.D{{"$set", bson.D{{"code", code}}}})
+	_, err_res := collection.UpdateOne(context.TODO(), bson.D{{"id", user.ID}}, bson.D{{"$set", bson.D{{"code", code}}}})
 
 	if err_res != nil {
 		errorLogger.Printf("error updating code in db: %s\n", err_res)
 		return false
 	}
-
-	debugLogger.Printf("code update result\n%s\n", indentJSON(res))
 	return true
 }
 
 func resetEmail(user *User) bool {
 	collection := db_client.Database("maxusers").Collection(user.Role)
 
-	res, err_res := collection.UpdateOne(context.TODO(), bson.D{{"id", user.ID}}, bson.D{{"$set", bson.D{{"email", user.Email}}}})
+	_, err_res := collection.UpdateOne(context.TODO(), bson.D{{"id", user.ID}}, bson.D{{"$set", bson.D{{"email", user.Email}}}})
 
 	if err_res != nil {
 		errorLogger.Printf("error updating email for user: %s\n", err_res)
 		return false
 	}
 
-	debugLogger.Printf("successfully updated email \n%s\n", indentJSON(res))
+	debugLogger.Printf("successfully updated email\n")
 	return true
 }
 
@@ -235,20 +233,19 @@ func getUserFromEmail(user *User) *User {
 
 func setPasswordResetID(user *User) bool {
 	collection := db_client.Database("maxusers").Collection(user.Role)
-	resp, err_resp := collection.UpdateOne(context.TODO(), bson.D{{"email", user.Email}}, bson.D{{"$set", bson.D{{"emailresetid", user.EmailResetID}}}})
+	_, err_resp := collection.UpdateOne(context.TODO(), bson.D{{"email", user.Email}}, bson.D{{"$set", bson.D{{"passwordresetid", user.PasswordResetID}}}})
 
 	if err_resp != nil {
 		return false
 	}
 
-	debugLogger.Printf("set the password reset id: %s\n", user.EmailResetID)
-	debugLogger.Printf("update password reset id: %s\n", indentJSON(resp))
+	debugLogger.Printf("set the password reset id: %s\n", user.PasswordResetID)
 	return true
 }
 
-func getUserFromEmailResetID(user *User) *User {
+func getUserFromPasswordResetID(user *User) *User {
 	colleciton := db_client.Database("maxusers").Collection(user.Role)
-	resp := colleciton.FindOne(context.TODO(), bson.D{{"emailresetid", user.EmailResetID}})
+	resp := colleciton.FindOne(context.TODO(), bson.D{{"passwordresetid", user.PasswordResetID}})
 
 	var res_bson bson.M
 	err_bson := resp.Decode(&res_bson)
